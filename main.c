@@ -7,9 +7,12 @@ int get_ngram(TGraph* g, TArray* array, int array_index, int vertex_index, int n
             array_get(array, array_index)
     };
 
-    current_ngram.values[n_counter - 1] = vertex_index;
+    current_ngram.values[n_counter - 1] = v->id;
 
-    if (n_counter > 1 && v->outdegree > 0) {
+    if (v->outdegree == 0) { // we reached a sink
+        return n_counter == 1;  // return, whether we completed an n-gram here or prune
+    }
+    else if (n_counter > 1) {   // we have not completed the current n-gram yet
         int ngram_count = 0;
         TIterator* it = vertex_get_successor(v);
 
@@ -21,18 +24,10 @@ int get_ngram(TGraph* g, TArray* array, int array_index, int vertex_index, int n
 
         return ngram_count;
     }
-    else if (n_counter == 1 && v->outdegree > 0) {
+    else {  // we completed an n-gram somewhere within the graph
+        // take 2nd component and compute overlapping n-gram
         return get_ngram(g, array, array_index + 1, current_ngram.values[n - 2], n, n) + 1;
     }
-    else {
-        return n_counter == 1;
-    }
-    /*else if (n > 1 && v->outdegree == 0) {
-        return 0;
-    }
-    else if (n == 1 && v->outdegree == 0) {
-        return 1;
-    }*/
 }
 
 TArray* fake_cmp(TGraph* g, int n) {
@@ -62,6 +57,19 @@ int main(char* argv[], int argc) {
     graph_init(&g1, 6);
     graph_init(&g2, 5);
 
+    graph_get_vertex(&g1, 0)->id = map[0];
+    graph_get_vertex(&g1, 1)->id = map[1];
+    graph_get_vertex(&g1, 2)->id = map[2];
+    graph_get_vertex(&g1, 3)->id = map[3];
+    graph_get_vertex(&g1, 4)->id = map[4];
+    graph_get_vertex(&g1, 5)->id = map[5];
+
+    graph_get_vertex(&g2, 0)->id = 0;
+    graph_get_vertex(&g2, 1)->id = 1;
+    graph_get_vertex(&g2, 2)->id = 2;
+    graph_get_vertex(&g2, 3)->id = 3;
+    graph_get_vertex(&g2, 4)->id = 4;
+
     graph_add_edge(&g1, 0, 1);
     graph_add_edge(&g1, 0, 2);
     graph_add_edge(&g1, 0, 3);
@@ -80,39 +88,3 @@ int main(char* argv[], int argc) {
 
     return 0;
 }
-
-/*if(edge_count == 7) {   // g1
-    array_set(ngrams, int, 0, 0);
-    array_set(ngrams, int, 1, 1);
-    array_set(ngrams, int, 2, 3);
-    array_set(ngrams, int, 3, 0);
-    array_set(ngrams, int, 4, 2);
-    array_set(ngrams, int, 5, 3);
-    array_set(ngrams, int, 6, 1);
-    array_set(ngrams, int, 7, 3);
-    array_set(ngrams, int, 8, 4);
-    array_set(ngrams, int, 9, 2);
-    array_set(ngrams, int, 10, 3);
-    array_set(ngrams, int, 11, 4);
-    array_set(ngrams, int, 12, 0);
-    array_set(ngrams, int, 13, -1);
-    array_set(ngrams, int, 14, 4);
-
-    ngrams->entry_count = 5;
-}
-else {  // g2
-    array_set(ngrams, int, 0, 0);
-    array_set(ngrams, int, 1, 1);
-    array_set(ngrams, int, 2, 3);
-    array_set(ngrams, int, 3, 0);
-    array_set(ngrams, int, 4, 2);
-    array_set(ngrams, int, 5, 3);
-    array_set(ngrams, int, 6, 1);
-    array_set(ngrams, int, 7, 3);
-    array_set(ngrams, int, 8, 4);
-    array_set(ngrams, int, 9, 2);
-    array_set(ngrams, int, 10, 3);
-    array_set(ngrams, int, 11, 4);
-
-    ngrams->entry_count = 4;
-}*/
