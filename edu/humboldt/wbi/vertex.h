@@ -6,6 +6,7 @@
 #define GRAPHS_VERTEX_H
 
 #include "iterator.h"
+#include "array.h"
 
 typedef struct Vertex TVertex;
 
@@ -17,7 +18,13 @@ struct Vertex {
 };
 
 TVertex* vertex_init();
-TIterator* vertex_get_successor(TVertex* v);
-TIterator* vertex_get_predecessor(TVertex* v);
+
+TIterator* vertex_get_successors(TVertex* v);
+
+TIterator* vertex_get_predecessors(TVertex* v);
+
+TArray* vertex_successors(TVertex* v);
+
+TArray* vertex_predecessors(TVertex* v);
 
 #endif //GRAPHS_VERTEX_H

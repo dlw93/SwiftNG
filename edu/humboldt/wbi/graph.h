@@ -2,8 +2,8 @@
 // Created by david on 11/20/2015.
 //
 
-#ifndef HELLOWORLD_GRAPH_H
-#define HELLOWORLD_GRAPH_H
+#ifndef GRAPHS_GRAPH_H
+#define GRAPHS_GRAPH_H
 
 #include "vertex.h"
 #include "ngram.h"
@@ -61,4 +61,4 @@ TVertex* graph_get_vertex(TGraph* graph, int index);
  */
 double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn, int n);
 
-#endif //HELLOWORLD_GRAPH_H
+#endif //GRAPHS_GRAPH_H
