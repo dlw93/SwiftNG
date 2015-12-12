@@ -13,7 +13,8 @@ typedef struct Graph TGraph;
 typedef TArray* (*ngram_fn) (TGraph*, int);
 
 struct Graph {
-    int node_count;
+    unsigned int node_count;
+    int* id_map;
     int* vertices;
 };
 
@@ -23,7 +24,7 @@ struct Graph {
  * @param graph The graph handle to initialize.
  * @param node_count The amount of nodes the graph consists of.
  */
-void graph_init(TGraph* graph, int node_count);
+void graph_init(TGraph* graph, unsigned int node_count);
 
 /**
  * Frees the memory occupied by a graph.

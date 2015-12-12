@@ -27,4 +27,6 @@ TArray* vertex_successors(TVertex* v);
 
 TArray* vertex_predecessors(TVertex* v);
 
+void vertex_set_id(TVertex* v, int value);
+
 #endif //GRAPHS_VERTEX_H

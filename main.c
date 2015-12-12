@@ -1,14 +1,11 @@
 #include <stdio.h>
+#include <sys/time.h>
 #include "edu/humboldt/wbi/graph.h"
-#include "edu/humboldt/wbi/index.h"
 
-int get_ngram(TGraph* g, TArray* array, int array_index, int vertex_index, int n_counter, int n) {
+int compute_path_ngrams_node(TGraph* g, TArray* array, int array_index, int vertex_index, int n_counter, int n) {
     TVertex* v = graph_get_vertex(g, vertex_index);
-    TNGram current_ngram = {
-            array_get(array, array_index)
-    };
 
-    current_ngram.values[n_counter - 1] = v->id;
+    ((int*) array_get(array, array_index))[n_counter - 1] = v->id;
 
     if (v->outdegree == 0) { // we reached a sink
         return n_counter == 1;  // return, whether we completed an n-gram here or prune
@@ -20,15 +17,15 @@ int get_ngram(TGraph* g, TArray* array, int array_index, int vertex_index, int n
         while (iterator_has_next(it)) {
             int suc_index = *(int*) iterator_next(it);
 
-            ngram_count += get_ngram(g, array, array_index + ngram_count, suc_index, n_counter - 1, n);
+            ngram_count += compute_path_ngrams_node(g, array, array_index + ngram_count, suc_index, n_counter - 1, n);
         }
 
         return ngram_count;
     }
-    else {  // we completed an n-gram somewhere within the graph
+    /*else {  // we completed an n-gram somewhere within the graph
         // take 2nd component and compute overlapping n-gram(s)
-        return get_ngram(g, array, array_index + 1, current_ngram.values[n - 2], n, n) + 1;
-    }
+        return compute_path_ngrams_node(g, array, array_index + 1, current_ngram.values[n - 2], n, n) + 1;
+    }*/
 }
 
 TArray* compute_path_ngrams(TGraph* g, int n) {
@@ -41,8 +38,8 @@ TArray* compute_path_ngrams(TGraph* g, int n) {
     for (int i = 0; i < g->node_count; ++i) {
         TVertex* v = graph_get_vertex(g, i);
 
-        if (v->indegree == 0) {
-            ngram_count += get_ngram(g, ngrams, ngram_count, i, n, n);
+        if (v->outdegree > 0) {
+            ngram_count += compute_path_ngrams_node(g, ngrams, ngram_count, i, n, n);
         }
     }
 
@@ -51,41 +48,56 @@ TArray* compute_path_ngrams(TGraph* g, int n) {
     return ngrams;
 }
 
-TArray* compute_node_neighbourhood_ngrams(TGraph* g, TVertex* v, int n) {
-    int pred_ngrams = v->outdegree - n + 3; // how many n-grams per predecessor
-    int ngram_count = v->indegree * pred_ngrams;
-    TArray* ngrams = malloc(sizeof(TArray));
-
-    array_init(ngrams, ngram_count, sizeof(int) * n);
-
-    for (int j = 1; j <= v->indegree; ++j) {
-        for (int i = 0; i < pred_ngrams; ++i) {
-            int* ngram = (int*) ngrams->values + i * n;
-
-            *ngram = v->neighbours[g->node_count - j];  // predecessor index
-            *(ngram + 1) = -1; // vertex index
-
-            for (int k = 2; k < n; ++k) {
-                *(ngram + k) = v->neighbours[i + k]; // successor index
-            }
-        }
-    }
-
-    return ngrams;
-}
-
-TArray* compute_neighbourhood_ngrams(TGraph* g, int n) {
-    int edge_count = graph_edge_count(g);
-    unsigned int ngram_count = 0;
-    TArray* ngrams = malloc(sizeof(TArray));
-
-    array_init(ngrams, edge_count, sizeof(int) * n);
+int compute_neighbourhood_ngram_count(TGraph* g, int n) {
+    int ngram_count = 0;
 
     for (int i = 0; i < g->node_count; ++i) {
         TVertex* v = graph_get_vertex(g, i);
 
         if (v->indegree > 0 && v->outdegree > 0) {
+            ngram_count += v->indegree * (v->outdegree - n + 3);
+        }
+    }
 
+    return ngram_count;
+}
+
+int compute_node_neighbourhood_ngrams(TGraph* g, TVertex* v, TNGram* ngrams, int n) {
+    int pred_ngrams = v->outdegree - n + 3; // how many n-grams per predecessor
+
+    for (int j = 1; j <= v->indegree; ++j) {
+        for (int i = 0; i < pred_ngrams; ++i) {
+            int* ngram = (int*) ngrams + i * n;
+
+            int pred_index = v->neighbours[g->node_count - j];
+
+            *ngram = graph_get_vertex(g, pred_index)->id;  // predecessor id
+            *(ngram + 1) = v->id; // vertex id
+
+            for (int k = 2; k < n; ++k) {
+                int succ_index = v->neighbours[i + k];
+
+                *(ngram + k) = graph_get_vertex(g, succ_index)->id; // successor id
+            }
+        }
+    }
+
+    return v->indegree * pred_ngrams;
+}
+
+TArray* compute_neighbourhood_ngrams(TGraph* g, int n) {
+    int ngram_count = compute_neighbourhood_ngram_count(g, n);
+
+    TArray* ngrams = malloc(sizeof(TArray));
+    array_init(ngrams, ngram_count, sizeof(int) * n);
+
+    int offset = 0;
+
+    for (int i = 0; i < g->node_count; ++i) {
+        TVertex* v = graph_get_vertex(g, i);
+
+        if (v->indegree > 0 && v->outdegree >= n - 2) {
+            offset += compute_node_neighbourhood_ngrams(g, v, array_get(ngrams, offset), n);
         }
     }
 
@@ -93,7 +105,7 @@ TArray* compute_neighbourhood_ngrams(TGraph* g, int n) {
 }
 
 int main(char* argv[], int argc) {
-    /*TGraph g1, g2;
+    TGraph g1, g2;
     int map[] = {0, 1, 2, -1, 3, 4};
 
     graph_init(&g1, 6);
@@ -126,9 +138,15 @@ int main(char* argv[], int argc) {
     graph_add_edge(&g2, 2, 3);
     graph_add_edge(&g2, 3, 4);
 
-    printf("%f", graph_compare(&g1, &g2, &compute_path_ngrams, 3));*/
+    struct timeval stop, start;
+    gettimeofday(&start, NULL);
 
-    char* index_path = argv[1];
+    printf("%f\n", graph_compare(&g1, &g2, &compute_path_ngrams, 3));
+
+    gettimeofday(&stop, NULL);
+    printf("took %lu\n", stop.tv_usec - start.tv_usec); // microseconds
+
+    /*char* index_path = argv[1];
     int g1_id = atoi(argv[2]);
     int g2_id = atoi(argv[3]);
     TIndex index;
@@ -137,7 +155,7 @@ int main(char* argv[], int argc) {
     TGraph* g1 = index_get_entry(&index, g1_id);
     TGraph* g2 = index_get_entry(&index, g2_id);
 
-    printf("%f", graph_compare(g1, g2, &compute_path_ngrams, 3));
+    printf("%f", graph_compare(g1, g2, &compute_path_ngrams, 3));*/
 
     return 0;
 }

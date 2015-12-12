@@ -3,18 +3,16 @@
 //
 
 #include <stdlib.h>
-#include <string.h>
 #include "graph.h"
 
-void graph_init(TGraph* graph, int node_count) {
+void graph_init(TGraph* graph, unsigned int node_count) {
     graph->node_count = node_count;
-    graph->vertices = malloc(sizeof(int) * (node_count + 3) * node_count);
-
-    memset(graph->vertices, 0, sizeof(graph->vertices));
+    graph->id_map = calloc((node_count + 4) * node_count, sizeof(int));
+    graph->vertices = graph->id_map + node_count;
 }
 
 void graph_delete(TGraph* graph) {
-    free(graph->vertices);
+    free(graph->id_map);
     free(graph);
 }
 
