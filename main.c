@@ -22,10 +22,11 @@ int compute_path_ngrams_node(TGraph* g, TArray* array, int array_index, int vert
 
         return ngram_count;
     }
-    /*else {  // we completed an n-gram somewhere within the graph
+    else {  // we completed an n-gram somewhere within the graph
+        return 1;
         // take 2nd component and compute overlapping n-gram(s)
-        return compute_path_ngrams_node(g, array, array_index + 1, current_ngram.values[n - 2], n, n) + 1;
-    }*/
+        //return compute_path_ngrams_node(g, array, array_index + 1, current_ngram.values[n - 2], n, n) + 1;
+    }
 }
 
 TArray* compute_path_ngrams(TGraph* g, int n) {
