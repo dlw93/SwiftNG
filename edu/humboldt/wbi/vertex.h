@@ -12,21 +12,15 @@ typedef struct Vertex TVertex;
 
 struct Vertex {
     int id;
-    int indegree;
-    int outdegree;
-    int neighbours[];
+    unsigned int indegree;
+    unsigned int outdegree;
+    unsigned int neighbours[];
 };
 
-TVertex* vertex_init();
+void vertex_init(TVertex* v);
 
 TIterator* vertex_get_successors(TVertex* v);
 
 TIterator* vertex_get_predecessors(TVertex* v);
-
-TArray* vertex_successors(TVertex* v);
-
-TArray* vertex_predecessors(TVertex* v);
-
-void vertex_set_id(TVertex* v, int value);
 
 #endif //GRAPHS_VERTEX_H

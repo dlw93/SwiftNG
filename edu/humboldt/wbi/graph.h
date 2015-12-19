@@ -10,11 +10,11 @@
 #include "array.h"
 
 typedef struct Graph TGraph;
-typedef TArray* (*ngram_fn) (TGraph*, int);
+
+typedef TArray* (* ngram_fn)(TGraph*, int);
 
 struct Graph {
     unsigned int node_count;
-    int* id_map;
     int* vertices;
 };
 
@@ -47,7 +47,7 @@ void graph_add_edge(TGraph* graph, int node1, int node2);
  *
  * @param graph A handle for the graph to retrieve the amount of edges from.
  */
-int graph_edge_count(TGraph* graph);
+unsigned int graph_edge_count(TGraph* graph);
 
 /**
  * Returns a handle for the graph's vertex specified by its index.

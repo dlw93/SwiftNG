@@ -7,12 +7,11 @@
 
 void graph_init(TGraph* graph, unsigned int node_count) {
     graph->node_count = node_count;
-    graph->id_map = calloc((node_count + 4) * node_count, sizeof(int));
-    graph->vertices = graph->id_map + node_count;
+    graph->vertices = calloc((node_count + 3) * node_count, sizeof(int));
 }
 
 void graph_delete(TGraph* graph) {
-    free(graph->id_map);
+    free(graph->vertices);
     free(graph);
 }
 
@@ -31,8 +30,12 @@ TVertex* graph_get_vertex(TGraph* graph, int index) {
     return (TVertex*) addr;
 }
 
-int graph_edge_count(TGraph* graph) {
-    int edge_count = 0;
+TVertex* graph_get_vertex_by_id(TGraph* graph, int id) {
+
+}
+
+unsigned int graph_edge_count(TGraph* graph) {
+    unsigned int edge_count = 0;
 
     for (int i = 0; i < graph->node_count; ++i) {
         edge_count += graph_get_vertex(graph, i)->indegree;

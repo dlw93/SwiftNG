@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include "edu/humboldt/wbi/graph.h"
+#include "edu/humboldt/wbi/index.h"
 
 int compute_path_ngrams_node(TGraph* g, TArray* array, int array_index, int vertex_index, int n_counter, int n) {
     TVertex* v = graph_get_vertex(g, vertex_index);
@@ -30,7 +31,7 @@ int compute_path_ngrams_node(TGraph* g, TArray* array, int array_index, int vert
 }
 
 TArray* compute_path_ngrams(TGraph* g, int n) {
-    int edge_count = graph_edge_count(g);
+    unsigned int edge_count = graph_edge_count(g);
     unsigned int ngram_count = 0;
     TArray* ngrams = malloc(sizeof(TArray));
 
@@ -49,8 +50,8 @@ TArray* compute_path_ngrams(TGraph* g, int n) {
     return ngrams;
 }
 
-int compute_neighbourhood_ngram_count(TGraph* g, int n) {
-    int ngram_count = 0;
+unsigned int compute_neighbourhood_ngram_count(TGraph* g, int n) {
+    unsigned int ngram_count = 0;
 
     for (int i = 0; i < g->node_count; ++i) {
         TVertex* v = graph_get_vertex(g, i);
@@ -87,7 +88,7 @@ int compute_node_neighbourhood_ngrams(TGraph* g, TVertex* v, TNGram* ngrams, int
 }
 
 TArray* compute_neighbourhood_ngrams(TGraph* g, int n) {
-    int ngram_count = compute_neighbourhood_ngram_count(g, n);
+    unsigned int ngram_count = compute_neighbourhood_ngram_count(g, n);
 
     TArray* ngrams = malloc(sizeof(TArray));
     array_init(ngrams, ngram_count, sizeof(int) * n);
@@ -105,58 +106,66 @@ TArray* compute_neighbourhood_ngrams(TGraph* g, int n) {
     return ngrams;
 }
 
-int main(char* argv[], int argc) {
-    TGraph g1, g2;
-    int map[] = {0, 1, 2, -1, 3, 4};
-
-    graph_init(&g1, 6);
-    graph_init(&g2, 5);
-
-    graph_get_vertex(&g1, 0)->id = map[0];
-    graph_get_vertex(&g1, 1)->id = map[1];
-    graph_get_vertex(&g1, 2)->id = map[2];
-    graph_get_vertex(&g1, 3)->id = map[3];
-    graph_get_vertex(&g1, 4)->id = map[4];
-    graph_get_vertex(&g1, 5)->id = map[5];
-
-    graph_get_vertex(&g2, 0)->id = 0;
-    graph_get_vertex(&g2, 1)->id = 1;
-    graph_get_vertex(&g2, 2)->id = 2;
-    graph_get_vertex(&g2, 3)->id = 3;
-    graph_get_vertex(&g2, 4)->id = 4;
-
-    graph_add_edge(&g1, 0, 1);
-    graph_add_edge(&g1, 0, 2);
-    graph_add_edge(&g1, 0, 3);
-    graph_add_edge(&g1, 1, 4);
-    graph_add_edge(&g1, 2, 4);
-    graph_add_edge(&g1, 3, 5);
-    graph_add_edge(&g1, 4, 5);
-
-    graph_add_edge(&g2, 0, 1);
-    graph_add_edge(&g2, 0, 2);
-    graph_add_edge(&g2, 1, 3);
-    graph_add_edge(&g2, 2, 3);
-    graph_add_edge(&g2, 3, 4);
-
+int main(int argc, char* argv[]) {
     struct timeval stop, start;
     gettimeofday(&start, NULL);
 
-    printf("%f\n", graph_compare(&g1, &g2, &compute_path_ngrams, 3));
-
-    gettimeofday(&stop, NULL);
-    printf("took %lu\n", stop.tv_usec - start.tv_usec); // microseconds
-
-    /*char* index_path = argv[1];
+    char* index_path = argv[1];
     int g1_id = atoi(argv[2]);
     int g2_id = atoi(argv[3]);
     TIndex index;
 
-    index_load_from_file(&index, argv[1]);
+    index_init(&index, index_path);
     TGraph* g1 = index_get_entry(&index, g1_id);
     TGraph* g2 = index_get_entry(&index, g2_id);
 
-    printf("%f", graph_compare(g1, g2, &compute_path_ngrams, 3));*/
+    printf("%f", graph_compare(g1, g2, &compute_path_ngrams, 3));
+
+    gettimeofday(&stop, NULL);
+    printf("took %lu\n", stop.tv_usec - start.tv_usec); // microseconds
 
     return 0;
 }
+
+/*
+TGraph g1, g2;
+int map[] = {0, 1, 2, -1, 3, 4};
+
+graph_init(&g1, 6);
+graph_init(&g2, 5);
+
+graph_get_vertex(&g1, 0)->id = 0;
+graph_get_vertex(&g1, 1)->id = 1;
+graph_get_vertex(&g1, 2)->id = 2;
+graph_get_vertex(&g1, 3)->id = 3;
+graph_get_vertex(&g1, 4)->id = 4;
+graph_get_vertex(&g1, 5)->id = 5;
+
+graph_get_vertex(&g2, 0)->id = 0;
+graph_get_vertex(&g2, 1)->id = 1;
+graph_get_vertex(&g2, 2)->id = 2;
+graph_get_vertex(&g2, 3)->id = 3;
+graph_get_vertex(&g2, 4)->id = 4;
+
+for (int i = 0; i < 6; ++i) {
+    TVertex* v = graph_get_vertex(&g1, i);
+
+    v->id = map[v->id];
+}
+
+graph_add_edge(&g1, 0, 1);
+graph_add_edge(&g1, 0, 2);
+graph_add_edge(&g1, 0, 3);
+graph_add_edge(&g1, 1, 4);
+graph_add_edge(&g1, 2, 4);
+graph_add_edge(&g1, 3, 5);
+graph_add_edge(&g1, 4, 5);
+
+graph_add_edge(&g2, 0, 1);
+graph_add_edge(&g2, 0, 2);
+graph_add_edge(&g2, 1, 3);
+graph_add_edge(&g2, 2, 3);
+graph_add_edge(&g2, 3, 4);
+
+printf("%f\n", graph_compare(&g1, &g2, &compute_path_ngrams, 2));
+ */
