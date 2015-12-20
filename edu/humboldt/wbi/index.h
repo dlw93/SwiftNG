@@ -13,17 +13,20 @@ typedef struct Index TIndex;
 typedef struct HeaderEntry THeaderEntry;
 
 struct Index {
-    FILE* header_file;
     TTreeSet* header_tree;
+    THeaderEntry* header_entries;
     FILE* data_file;
 };
 
 struct HeaderEntry {
+    int id;
     long pos;
-    size_t length;
+    size_t size;
 };
 
 void index_init(TIndex* index, char* path);
+
+void index_delete(TIndex* index);
 
 void* index_get_entry(TIndex* index, int key);
 

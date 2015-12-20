@@ -5,20 +5,24 @@
 #ifndef GRAPHS_TREESET_H
 #define GRAPHS_TREESET_H
 
+#define N 8
+
 typedef struct TreeSet TTreeSet;
 typedef struct TreeNode TTreeNode;
 
 struct TreeNode {
     void* value;
-    TTreeNode* children[];
+    TTreeNode* children[N];
 };
 
 struct TreeSet {
-    int n;
-    TTreeNode* children[];
+    unsigned int n;
+    TTreeNode* root;
 };
 
-void treeset_init(TTreeSet* t, int n);
+void treeset_init(TTreeSet* t, unsigned int n);
+
+void treeset_delete(TTreeSet* t);
 
 void treeset_add(TTreeSet* t, int key, void* entry);
 
