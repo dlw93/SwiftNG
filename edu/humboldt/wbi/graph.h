@@ -15,16 +15,16 @@ typedef TArray* (* ngram_fn)(TGraph*, int);
 
 struct Graph {
     unsigned int node_count;
-    int* vertices;
+    unsigned int vertices[];
 };
 
 /**
  * Initializes a graph with the specified amount of nodes.
  *
- * @param graph The graph handle to initialize.
  * @param node_count The amount of nodes the graph consists of.
+ * @returns The initialized graph handle.
  */
-void graph_init(TGraph* graph, unsigned int node_count);
+TGraph *graph_init(unsigned int node_count);
 
 /**
  * Frees the memory occupied by a graph.
@@ -40,7 +40,7 @@ void graph_delete(TGraph* graph);
  * @param node1 The index of the source node.
  * @param node2 The index og the destination node.
  */
-void graph_add_edge(TGraph* graph, int node1, int node2);
+void graph_add_edge(TGraph *graph, unsigned int node1, unsigned int node2);
 
 /**
  * Returns the amount of edges in the graph.
@@ -48,6 +48,13 @@ void graph_add_edge(TGraph* graph, int node1, int node2);
  * @param graph A handle for the graph to retrieve the amount of edges from.
  */
 unsigned int graph_edge_count(TGraph* graph);
+
+/**
+ * Returns the amount of vertices in the graph.
+ *
+ * @param graph A handle for the graph to retrieve the amount of vertices from.
+ */
+unsigned int graph_vertex_count(TGraph *graph);
 
 /**
  * Returns a handle for the graph's vertex specified by its index.

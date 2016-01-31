@@ -12,22 +12,32 @@
 typedef struct Index TIndex;
 typedef struct HeaderEntry THeaderEntry;
 
+typedef void (*tree_init_fn)(void *);
+
+typedef void *(*tree_get_fn)(void *, int *);
+
+typedef void (*tree_add_fn)(void *, void *, int *);
+
 struct Index {
-    TTreeSet* header_tree;
-    THeaderEntry* header_entries;
+    void *header_tree;
+    tree_init_fn init_fn;
+    tree_add_fn add_fn;
+    tree_get_fn get_fn;
+    void *header_entries;
+    size_t header_entry_size;
     FILE* data_file;
 };
 
 struct HeaderEntry {
-    int id;
     long pos;
-    size_t size;
+    unsigned int size;
+    int id[];
 };
 
 void index_init(TIndex* index, char* path);
 
 void index_delete(TIndex* index);
 
-void* index_get_entry(TIndex* index, int key);
+void *index_get_entry(TIndex *index, int *key);
 
 #endif //GRAPHS_INDEX_H

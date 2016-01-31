@@ -16,18 +16,13 @@ struct TreeNode {
 };
 
 struct TreeSet {
-    unsigned int n;
     TTreeNode* root;
 };
 
-void treeset_init(TTreeSet* t, unsigned int n);
+void treeset_init(TTreeSet *t);
 
-void treeset_delete(TTreeSet* t);
+void treeset_add(TTreeSet *t, void *entry, int *key);
 
-void treeset_add(TTreeSet* t, int key, void* entry);
-
-void* treeset_get(TTreeSet* t, int key);
-
-int treeset_contains(TTreeSet* t, int key);
+void *treeset_get(TTreeSet *t, int *key);
 
 #endif //GRAPHS_TREESET_H

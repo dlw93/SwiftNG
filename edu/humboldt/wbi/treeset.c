@@ -5,26 +5,22 @@
 #include <stdlib.h>
 #include "treeset.h"
 
-void treeset_init(TTreeSet* t, unsigned int n) {
-    t->n = n;
+void treeset_init(TTreeSet *t) {
     t->root = 0;
 }
 
-void treeset_delete(TTreeSet* t) {
-
-}
-
-void treeset_add(TTreeSet* t, int key, void* entry) {
+void treeset_add(TTreeSet *t, void *entry, int *key) {
     TTreeNode** node = &t->root;
+    int _key = *key;
 
     do {
         if (*node == 0) {
             *node = calloc(1, sizeof(TTreeNode));
         }
 
-        node = &(*node)->children[key % t->n];
-        key = key / t->n;
-    } while (key > 0);
+        node = &(*node)->children[_key % N];
+        _key = _key / N;
+    } while (_key > 0);
 
     if (*node == 0) {
         *node = calloc(1, sizeof(TTreeNode));
@@ -33,17 +29,17 @@ void treeset_add(TTreeSet* t, int key, void* entry) {
     (*node)->value = entry;
 }
 
-void* treeset_get(TTreeSet* t, int key) {
+TTreeNode *treeset_find(TTreeSet *t, int key) {
     TTreeNode* node = t->root;
 
     do {
-        node = node->children[key % t->n];
-        key = key / t->n;
+        node = node->children[key % N];
+        key = key / N;
     } while (key > 0);
 
-    return node->value;
+    return node;
 }
 
-int treeset_contains(TTreeSet* t, int key) {
-
+void *treeset_get(TTreeSet *t, int *key) {
+    return treeset_find(t, *key)->value;
 }
