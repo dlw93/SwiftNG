@@ -3,6 +3,7 @@
 //
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "treeset.h"
 
 void treeset_init(TTreeSet *t) {
@@ -35,11 +36,17 @@ TTreeNode *treeset_find(TTreeSet *t, int key) {
     do {
         node = node->children[key % N];
         key = key / N;
-    } while (key > 0);
+    } while (key > 0 && node != NULL);
 
     return node;
 }
 
+int treeset_has(TTreeSet *t, int *key) {
+    return treeset_find(t, *key) != NULL;
+}
+
 void *treeset_get(TTreeSet *t, int *key) {
-    return treeset_find(t, *key)->value;
+	TTreeNode *result = treeset_find(t, *key);
+
+    return result != NULL ? result->value : NULL;
 }

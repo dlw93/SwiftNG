@@ -5,19 +5,14 @@
 #include "index.h"
 #include "quadtree.h"
 
-void index_init(TIndex* index, char* path) {
-    FILE* f = fopen(path, "rb");
+void index_init(TIndex* index, char* header_path, char* body_path) {
+    FILE* f = fopen(header_path, "rb");
 
-    int body_path_length;
-    char* body_path;
     int entry_count;
     int key_dim;
 
-    fread(&body_path_length, sizeof(int), 1, f);
-    body_path = malloc(sizeof(char) * body_path_length);
-    fread(body_path, sizeof(char) * body_path_length, 1, f);
     fread(&entry_count, sizeof(int), 1, f);
-    fread(&key_dim, 1, 1, f);
+    fread(&key_dim, sizeof(int), 1, f);
 
     index->header_entry_size = sizeof(long) + (key_dim + 1) * sizeof(int);
     index->header_entries = malloc(entry_count * index->header_entry_size);
@@ -29,12 +24,14 @@ void index_init(TIndex* index, char* path) {
         index->init_fn = treeset_init;
         index->add_fn = treeset_add;
         index->get_fn = treeset_get;
+		index->has_fn = treeset_has;
     }
     else if (key_dim == 2) {
         index->header_tree = malloc(sizeof(TQuadTree));
         index->init_fn = quadtree_init;
         index->add_fn = quadtree_add;
         index->get_fn = quadtree_get;
+		index->has_fn = quadtree_has;
     }
     else {
         exit(1);    // a dimension we can't handle
@@ -63,12 +60,22 @@ void index_delete(TIndex* index) {
     fclose(index->data_file);
 }
 
-void *index_get_entry(TIndex *index, int *key) {
+int index_has(TIndex* index, int *key) {
+	return index->has_fn(index->header_tree, key);
+}
+
+void *index_get(TIndex *index, int *key) {
     THeaderEntry *he = index->get_fn(index->header_tree, key);
-    void* data = malloc(he->size);
 
-    fseek(index->data_file, he->pos, SEEK_SET);
-    fread(data, sizeof(int), he->size / sizeof(int), index->data_file);
+	if(he != NULL) {
+		void* data = malloc(he->size);
 
-    return data;
+	    fseek(index->data_file, he->pos, SEEK_SET);
+	    fread(data, sizeof(int), he->size / sizeof(int), index->data_file);
+
+	    return data;
+	}
+	else {
+		return NULL;
+	}
 }

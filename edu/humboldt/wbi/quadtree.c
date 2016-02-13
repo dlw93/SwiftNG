@@ -51,16 +51,14 @@ void quadtree_add(TQuadTree *t, void *entry, int *key) {
     (*node)->value = entry;
 }
 
-void *quadtree_get(TQuadTree *t, int *key) {
-    int x = key[0];
-    int y = key[1];
+TQuadTreeNode *quadtree_find(TQuadTree *t, int x, int y) {
     int size = SIZE;
     TQuadTreeNode *node = t->root;
 
     int xn = 0;
     int yn = 0;
 
-    while (size > 1) {
+    while (size > 1 && node) {
         int direction = get_direction(x, y, xn, yn, size);
 
         node = node->children[direction];
@@ -69,5 +67,15 @@ void *quadtree_get(TQuadTree *t, int *key) {
         yn += size * (direction >> 1);
     }
 
-    return node->value;
+    return node;
+}
+
+int quadtree_has(TQuadTree *t, int *key) {
+	return quadtree_find(t, key[0], key[1]) != NULL;
+}
+
+void *quadtree_get(TQuadTree *t, int *key) {
+	TQuadTreeNode* result = quadtree_find(t, key[0], key[1]);
+
+    return result != NULL ? result->value : NULL;
 }

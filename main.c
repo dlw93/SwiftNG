@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <sys/time.h>
 #include <string.h>
 #include "edu/humboldt/wbi/graph.h"
 #include "edu/humboldt/wbi/index.h"
@@ -19,6 +18,10 @@ int compute_path_ngrams_node(TGraph *g, TArray *array, int array_index, int vert
         while (iterator_has_next(it)) {
             int suc_index = *(int *) iterator_next(it);
 
+            for (int i = n_counter - 1; i < n; ++i) {
+                ((int *) array_get(array, array_index + ngram_count))[i] = ((int *) array_get(array, array_index))[i];
+            }
+
             ngram_count += compute_path_ngrams_node(g, array, array_index + ngram_count, suc_index, n_counter - 1, n);
         }
 
@@ -37,7 +40,7 @@ TArray *compute_path_ngrams(TGraph *g, int n) {
     TArray *ngrams = malloc(sizeof(TArray));
 
     array_init(ngrams, g->node_count * g->node_count * g->node_count / 4,
-               sizeof(int) * n); // max. amount of n-grams ~ (n^3 - n)/6
+               sizeof(int) * n); // max. possible amount of n-grams = (n^3 - n)/6
 
     for (int i = 0; i < g->node_count; ++i) {
         TVertex *v = graph_get_vertex(g, i);
@@ -58,7 +61,7 @@ unsigned int compute_neighbourhood_ngram_count(TGraph *g, int n) {
     for (int i = 0; i < g->node_count; ++i) {
         TVertex *v = graph_get_vertex(g, i);
 
-        if (v->indegree > 0 && v->outdegree > 0) {
+        if (v->indegree > 0 && v->outdegree >= n - 2) {
             ngram_count += v->indegree * (v->outdegree - n + 3);
         }
     }
@@ -66,20 +69,40 @@ unsigned int compute_neighbourhood_ngram_count(TGraph *g, int n) {
     return ngram_count;
 }
 
+static inline void swap(int *a, int *b) {
+	int t = *a;
+	*a = *b;
+	*b = t;
+}
+
+static inline void sort(int* array, int length) {
+	// TODO: quicksort please!!
+	for (size_t i = 0; i < length; i++) {
+		for (size_t j = 0; j < length - i - 1; j++) {
+			if(array[j] > array[j + 1]) {
+				swap(array + j, array + j + 1);
+			}
+		}
+	}
+}
+
 int compute_node_neighbourhood_ngrams(TGraph *g, TVertex *v, TNGram *ngrams, int n) {
     int pred_ngrams = v->outdegree - n + 3; // how many n-grams per predecessor
+	int count = 0;
+
+	// sort successors first
+	sort(v->neighbours, v->outdegree);
 
     for (int j = 1; j <= v->indegree; ++j) {
         for (int i = 0; i < pred_ngrams; ++i) {
-            int *ngram = (int *) ngrams + i * n;
-
+            int *ngram = (int *) ngrams + (count++) * n;
             int pred_index = v->neighbours[g->node_count - j];
 
             *ngram = graph_get_vertex(g, pred_index)->id;  // predecessor id
             *(ngram + 1) = v->id; // vertex id
 
             for (int k = 2; k < n; ++k) {
-                int succ_index = v->neighbours[i + k];  // i+k-2 ??
+                int succ_index = v->neighbours[i + k - 2];  // i+k-2 ??
 
                 *(ngram + k) = graph_get_vertex(g, succ_index)->id; // successor id
             }
@@ -138,11 +161,11 @@ char *strip_path_delimiter(char *path) {
     return path;
 }
 
-char *build_index_path(char *base, char *index) {
-    size_t res_strlen = strlen(base) + strlen(index) + 6; // '+6' because of path separator, extension and '\0'
+char *build_index_path(char *base, char *index, char *ext) {
+    size_t res_strlen = strlen(base) + strlen(index) + strlen(ext) + 3; // '+3' because of path separator, dot and '\0'
     char *buf = malloc(sizeof(char) * res_strlen);
 
-    snprintf(buf, res_strlen, "%s/%s.hdr", base, index);
+    snprintf(buf, res_strlen, "%s/%s.%s", base, index, ext);
 
     return buf;
 }
@@ -155,77 +178,50 @@ void map_ids(TGraph *graph, int *map) {
     }
 }
 
+void load_index(TIndex *index, char* base_path, char* name) {
+	strip_path_delimiter(base_path);
+
+	char *header_path = build_index_path(base_path, name, "hdr");
+	char *body_path = build_index_path(base_path, name, "idx");
+
+	index_init(index, header_path, body_path);
+}
+
 int main(int argc, char *argv[]) {
-    struct timeval stop, start;
-    gettimeofday(&start, NULL);
-
-    strip_path_delimiter(argv[1]);
-
-    char *graphs_index_path = build_index_path(argv[1], "graphs");
-    char *mappings_index_path = build_index_path(argv[1], "mappings");
-    int ids[] = {atoi(argv[2]), atoi(argv[3])};
-
     TIndex graphIndex;
     TIndex mappingIndex;
+	ngram_fn fns[2] = { &compute_path_ngrams, &compute_neighbourhood_ngrams };
 
-    index_init(&graphIndex, graphs_index_path);
-    index_init(&mappingIndex, mappings_index_path);
+	load_index(&graphIndex, argv[1], "graphs");
+	load_index(&mappingIndex, argv[1], "mappings");
 
-    TGraph *g1 = index_get_entry(&graphIndex, &ids[0]);
-    TGraph *g2 = index_get_entry(&graphIndex, &ids[1]);
-    int *map = index_get_entry(&mappingIndex, ids);
+	int ids[2], fn, n;
 
-    map_ids(g1, map);
+    while (scanf("%i %i %i %i", &fn, &n, &ids[0], &ids[1]) != EOF) {
+		TGraph *g1 = index_get(&graphIndex, &ids[0]);
+        TGraph *g2 = index_get(&graphIndex, &ids[1]);
+        int *map = index_get(&mappingIndex, ids);
 
-    printf("%i\t%i\t%f\r\n", ids[0], ids[1], graph_compare(g1, g2, &compute_path_ngrams, 3));
+		int err = ((g1 == NULL) << 2) | ((g2 == NULL) << 1) | (map == NULL);
 
-    gettimeofday(&stop, NULL);
-    printf("took %lu\n", stop.tv_usec - start.tv_usec); // microseconds
+		if (err == 0) {
+			map_ids(g1, map);
+
+			double result = 0;
+
+			for (size_t i = 2; i <= n; i++) {
+				result += i * graph_compare(g1, g2, fns[fn], i)
+			}
+
+			result = result / (((n * (n+1))/2)-1);
+
+			printf("%i\t%i\t%f\n", ids[0], ids[1], result);
+	        //printf("%i\t%i\t%f\n", ids[0], ids[1], graph_compare(g1, g2, fns[fn], n));
+		}
+		else {
+			fprintf(stderr, "%d\t%d\t%d\n", err, ids[0], ids[1]);
+		}
+    }
 
     return 0;
 }
-
-/*int main(int argc, char* argv[]) {
-    TGraph* g1, * g2;
-    int map[] = {0, 1, 2, -1, 3, 4};
-
-    g1 = graph_init(6);
-    g2 = graph_init(5);
-
-    graph_get_vertex(g1, 0)->id = 0;
-    graph_get_vertex(g1, 1)->id = 1;
-    graph_get_vertex(g1, 2)->id = 2;
-    graph_get_vertex(g1, 3)->id = 3;
-    graph_get_vertex(g1, 4)->id = 4;
-    graph_get_vertex(g1, 5)->id = 5;
-
-    graph_get_vertex(g2, 0)->id = 0;
-    graph_get_vertex(g2, 1)->id = 1;
-    graph_get_vertex(g2, 2)->id = 2;
-    graph_get_vertex(g2, 3)->id = 3;
-    graph_get_vertex(g2, 4)->id = 4;
-
-    for (int i = 0; i < 6; ++i) {
-        TVertex* v = graph_get_vertex(g1, i);
-
-        v->id = map[v->id];
-    }
-
-    graph_add_edge(g1, 0, 1);
-    graph_add_edge(g1, 0, 2);
-    graph_add_edge(g1, 0, 3);
-    graph_add_edge(g1, 1, 4);
-    graph_add_edge(g1, 2, 4);
-    graph_add_edge(g1, 3, 5);
-    graph_add_edge(g1, 4, 5);
-
-    graph_add_edge(g2, 0, 1);
-    graph_add_edge(g2, 0, 2);
-    graph_add_edge(g2, 1, 3);
-    graph_add_edge(g2, 2, 3);
-    graph_add_edge(g2, 3, 4);
-
-    printf("%f\n", graph_compare(g1, g2, &compute_path_ngrams, 2));
-
-    return 0;
-}*/

@@ -25,4 +25,6 @@ void treeset_add(TTreeSet *t, void *entry, int *key);
 
 void *treeset_get(TTreeSet *t, int *key);
 
+int treeset_has(TTreeSet *t, int *key);
+
 #endif //GRAPHS_TREESET_H

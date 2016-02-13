@@ -23,4 +23,6 @@ void quadtree_add(TQuadTree *t, void *entry, int *key);
 
 void *quadtree_get(TQuadTree *t, int *key);
 
+int quadtree_has(TQuadTree *t, int *key);
+
 #endif //GRAPHS_QUADTREE_H
