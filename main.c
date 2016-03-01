@@ -207,7 +207,7 @@ int main(int argc, char *argv[]) {
 		if (err == 0) {
 			map_ids(g1, map);
 
-			double result = 0;
+			/*double result = 0;
 
 			for (size_t i = 2; i <= n; i++) {
 				result += i * graph_compare(g1, g2, fns[fn], i)
@@ -215,8 +215,8 @@ int main(int argc, char *argv[]) {
 
 			result = result / (((n * (n+1))/2)-1);
 
-			printf("%i\t%i\t%f\n", ids[0], ids[1], result);
-	        //printf("%i\t%i\t%f\n", ids[0], ids[1], graph_compare(g1, g2, fns[fn], n));
+			printf("%i\t%i\t%f\n", ids[0], ids[1], result);*/
+	        printf("%i\t%i\t%f\n", ids[0], ids[1], graph_compare(g1, g2, fns[fn], n));
 		}
 		else {
 			fprintf(stderr, "%d\t%d\t%d\n", err, ids[0], ids[1]);
