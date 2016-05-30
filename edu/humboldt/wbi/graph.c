@@ -47,13 +47,52 @@ unsigned int graph_vertex_count(TGraph *graph) {
     return graph->node_count;
 }
 
-double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn, int n) {
+/*double compute_ngram_coverage(TGraph* graph, TArray* ngrams) {
+    
+}
+
+TArray* compute_ngrams_min_coverage(TGraph* graph, ngram_fn fn, double coverage) {
+    int n = 5;
+    
+    TArray* a = fn(graph, n);
+    double c = compute_ngram_coverage(graph, a);
+    
+    while(c < coverage) {
+        array_delete(a);
+        a = fn(graph, --n);
+        c = compute_ngram_coverage(graph, a);
+    }
+}*/
+
+double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn) {
+    double coverage_threshold = 0.8;
+    
+    /*TArray* a1 = compute_ngrams_min_coverage(g1, fn, coverage_threshold);
+    TArray* a2 = compute_ngrams_min_coverage(g2, fn, coverage_threshold);*/
+    
+    TArray* a1 = fn(g1);
+    TArray* a2 = fn(g2);
+    
+    TArray* a_min = a1->entry_count < a2->entry_count ? a1 : a2;
+    TArray* a_max = a1 == a_min ? a2 : a1;
+
+    if (a_min->entry_count == 0) {
+        return -1;  // signal that we can't compare these graphs by ngram-set-similarity
+    }
+
+    array_sort(a_min, ngram_compare);
+    array_sort(a_max, ngram_compare);
+    
+    return array_compare(a_min, a_max, ngram_compare);
+}
+
+/*double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn) {
     size_t intersection_size = 0;
     size_t entry_count = 0;
 
     TArray* a1 = fn(g1, n);
     TArray* a2 = fn(g2, n);
-
+    
     TArray* a_min = a1->entry_count < a2->entry_count ? a1 : a2;
     TArray* a_max = a1 == a_min ? a2 : a1;
 
@@ -87,4 +126,4 @@ double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn, int n) {
     array_delete(a2);
 
     return 1.0 - ((double) intersection_size / (double) (entry_count - intersection_size)); // Jaccard "distance"
-}
+}*/

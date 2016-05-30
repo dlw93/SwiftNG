@@ -65,8 +65,15 @@ unsigned int graph_vertex_count(TGraph *graph);
 TVertex* graph_get_vertex(TGraph* graph, int index);
 
 /**
+ * Computes the percentage of vertices that is part of at least one ngram.
+ * @param graph The graph to analyse.
+ * @param ngrams The ngrams computed on the specified graph.
+ */
+double graph_ngram_coverage(TGraph* graph, TArray* ngrams);
+
+/**
  * Compares two graphs and return a value within [0, 1].
  */
-double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn, int n);
+double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn);
 
 #endif //GRAPHS_GRAPH_H

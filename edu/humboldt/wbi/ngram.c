@@ -20,7 +20,7 @@ int ngram_get(TNGram* ngram, int index) {
 }
 
 /**
- * Compares to n-grams and returns "0" in case of equality, "-1" in case of "n1 < n2" and "1" in case of "n1 > n2".
+ * Compares two n-grams and returns "0" in case of equality, "-1" in case of "n1 < n2" and "1" in case of "n1 > n2".
  */
 int ngram_compare(void* ngram1, void* ngram2, size_t ngram_length) {
     size_t n = ngram_length / sizeof(int);
