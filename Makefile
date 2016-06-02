@@ -8,11 +8,11 @@ BIN=swfcmp
 all: $(BIN)
 
 $(BIN): $(OBJ)
-	$(CC) $(LFLAGS) $(OBJ) -o swfcmp
+	$(CC) $(OBJ) -o swfcmp $(LFLAGS)
 
 obj/%.o: %.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c $< -o $@ $(CFLAGS)
 
 clean:
 	-rm -R obj
