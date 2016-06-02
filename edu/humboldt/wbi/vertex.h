@@ -21,6 +21,4 @@ void vertex_init(TVertex* v);
 
 TIterator* vertex_get_successors(TVertex* v);
 
-TIterator* vertex_get_predecessors(TVertex* v);
-
 #endif //GRAPHS_VERTEX_H

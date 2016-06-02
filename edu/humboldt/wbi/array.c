@@ -101,8 +101,8 @@ double array_compare(TArray* array1, TArray* array2, array_entry_cmp_fn cmp_fn) 
         void* val1 = array_get(array1, i);
         void* val2 = array_get(array2, j);
         
-        if (cmp_fn(val2, val1) < 0) j++;
-        else if (cmp_fn(val1, val2)) i++;
+        if (cmp_fn(val2, val1, array1->entry_length) < 0) j++;
+        else if (cmp_fn(val1, val2, array1->entry_length)) i++;
         else {
             i++;
             j++;

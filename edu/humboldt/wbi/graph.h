@@ -74,6 +74,6 @@ double graph_ngram_coverage(TGraph* graph, TArray* ngrams);
 /**
  * Compares two graphs and return a value within [0, 1].
  */
-double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn);
+double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn, unsigned int n);
 
 #endif //GRAPHS_GRAPH_H
