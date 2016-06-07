@@ -112,3 +112,31 @@ double array_compare(TArray* array1, TArray* array2, array_entry_cmp_fn cmp_fn) 
     
     return (double)common / (double)(array1->entry_count + array2->entry_count - common);
 }
+
+TArray* array_intersect(TArray* array1, TArray* array2, array_entry_cmp_fn cmp_fn) {
+    int i = 0;
+    int j = 0;
+    int common = 0;
+    TArray *intersection = malloc(sizeof(TArray));
+    
+    array_init(intersection, array1->entry_count, sizeof(int*));
+    
+    while (i < array1->entry_count && j < array2->entry_count) {
+        void* val1 = array_get(array1, i);
+        void* val2 = array_get(array2, j);
+        
+        if (cmp_fn(val2, val1, array1->entry_length) < 0) j++;
+        else if (cmp_fn(val1, val2, array1->entry_length)) i++;
+        else {
+            ((int**)intersection->values)[common] = val1;
+            
+            i++;
+            j++;
+            common++;
+        }
+    }
+    
+    array_subarray(intersection, 0, common);
+    
+    return intersection;
+}

@@ -8,6 +8,7 @@
 #include "vertex.h"
 #include "ngram.h"
 #include "array.h"
+#include "matching.h"
 
 typedef struct Graph TGraph;
 
@@ -74,6 +75,6 @@ double graph_ngram_coverage(TGraph* graph, TArray* ngrams);
 /**
  * Compares two graphs and return a value within [0, 1].
  */
-double graph_compare(TGraph* g1, TGraph* g2, ngram_fn fn, unsigned int n);
+double graph_compare(TGraph* g1, TGraph* g2, TMatching* map, ngram_fn fn, unsigned int n);
 
 #endif //GRAPHS_GRAPH_H

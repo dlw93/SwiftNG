@@ -2,6 +2,58 @@
 #include <string.h>
 #include "lib/sqlite/sqlite3.h"
 #include "edu/humboldt/wbi/graph.h"
+#include "edu/humboldt/wbi/matching.h"
+
+int binomial(int n, int r) {
+    if(r > n / 2) {
+        r = n - r;
+    }
+    
+    int ans = 1;
+
+    for(int i = 1; i <= r; i++) {
+        ans *= n - r + i;
+        ans /= i;
+    }
+
+    return ans;
+}
+
+void binomial_enum_rec(int n, int k, int p, int low, int* c, int* data, int* combs) {
+    int high = n - k + p;
+
+    for (int i = low; i <= high; i++) {
+        data[p] = i;
+
+        if (p >= k - 1) {
+            int* comb = combs + (*c)++ * k;
+
+            for (int j = 0; j < k; j++) {
+                comb[j] = data[j];
+            }
+        }
+        else {
+            binomial_enum_rec(n, k, p + 1, i + 1, c, data, combs);
+        }
+    }
+}
+
+TArray* binomial_enum(int n, int k) {
+    int bin = binomial(n, k);
+    int* combs = malloc(sizeof(int) * bin * k);
+    int data[k];
+    int count = 0;
+
+    binomial_enum_rec(n, k, 0, 0, &count, data, combs);
+    
+    TArray *combs_array = malloc(sizeof(TArray));
+    combs_array->entry_count = bin;
+    combs_array->entry_length  = k * sizeof(int);
+    combs_array->values = combs;
+    combs_array->values_init_addr = combs_array->values;
+    
+    return combs_array;
+}
 
 int compute_path_ngrams_node(TGraph *g, TArray *array, int array_index, int vertex_index, int n_counter, int n) {
     TVertex *v = graph_get_vertex(g, vertex_index);
@@ -45,9 +97,7 @@ TArray *compute_path_ngrams(TGraph *g, int n) {
     for (int i = 0; i < g->node_count; ++i) {
         TVertex *v = graph_get_vertex(g, i);
 
-        if (v->outdegree > 0) {
-            ngram_count += compute_path_ngrams_node(g, ngrams, ngram_count, i, n, n);
-        }
+        ngram_count += compute_path_ngrams_node(g, ngrams, ngram_count, i, n, n);
     }
 
     array_subarray(ngrams, 0, ngram_count);
@@ -62,54 +112,33 @@ unsigned int compute_neighbourhood_ngram_count(TGraph *g, int n) {
         TVertex *v = graph_get_vertex(g, i);
 
         if (v->indegree > 0 && v->outdegree >= n - 2) {
-            ngram_count += v->indegree * (v->outdegree - n + 3);
+            ngram_count += binomial(v->outdegree, n - 2) * v->indegree;
         }
     }
 
     return ngram_count;
 }
 
-static inline void swap(int *a, int *b) {
-    int t = *a;
-    *a = *b;
-    *b = t;
-}
-
-static inline void sort(int *array, int length) {
-    // TODO: quicksort please!!
-    for (size_t i = 0; i < length; i++) {
-        for (size_t j = 0; j < length - i - 1; j++) {
-            if (array[j] > array[j + 1]) {
-                swap(array + j, array + j + 1);
-            }
-        }
-    }
-}
-
 int compute_node_neighbourhood_ngrams(TGraph *g, TVertex *v, TNGram *ngrams, int n) {
-    int pred_ngrams = v->outdegree - n + 3; // how many n-grams per predecessor
-    int count = 0;
+    TArray* combs = binomial_enum(v->outdegree, n - 2);
+    
+    for (int i = 0; i < v->indegree; i++) {
+        for (int j = 0; j < combs->entry_count; j++) {
+            int *comb = array_get(combs, j);
+            int *ngram = (int *) ngrams + (i * combs->entry_count + j) * n;
+            int pred_index = v->neighbours[g->node_count - i - 1];
 
-    // sort successors first
-    sort(v->neighbours, v->outdegree);
-
-    for (int j = 1; j <= v->indegree; ++j) {
-        for (int i = 0; i < pred_ngrams; ++i) {
-            int *ngram = (int *) ngrams + (count++) * n;
-            int pred_index = v->neighbours[g->node_count - j];
-
-            *ngram = graph_get_vertex(g, pred_index)->id;  // predecessor id
-            *(ngram + 1) = v->id; // vertex id
-
-            for (int k = 2; k < n; ++k) {
-                int succ_index = v->neighbours[i + k - 2];  // i+k-2 ??
-
-                *(ngram + k) = graph_get_vertex(g, succ_index)->id; // successor id
+            *ngram = graph_get_vertex(g, pred_index)->id;
+            *(ngram + 1) = v->id;
+            
+            for (int k = 2; k < n; k++) {
+                int succ_index = v->neighbours[comb[k - 2]];
+                *(ngram + k) = graph_get_vertex(g, succ_index)->id;
             }
         }
     }
 
-    return v->indegree * pred_ngrams;
+    return v->indegree * combs->entry_count;
 }
 
 TArray *compute_neighbourhood_ngrams(TGraph *g, int n) {
@@ -172,23 +201,24 @@ TGraph *load_graph(sqlite3 *db, unsigned int id) {
     return graph;
 }
 
-int *load_matching(sqlite3 *db, unsigned int id1, unsigned int id2, size_t vertex_count) {
-    int *matching = malloc(sizeof(int) * vertex_count);
+TMatching *load_matching(sqlite3 *db, unsigned int id1, unsigned int id2, size_t vertex_count) {
+    TMatching *matching = malloc(sizeof(TMatching) * vertex_count);
     sqlite3_stmt *selectMatchingStatement;
 
     sqlite3_prepare_v2(db,
-                       "SELECT vertexNumber1, vertexNumber2 FROM Matching WHERE graphPairId=(SELECT id FROM GraphPair WHERE graphId1=? AND graphId2=?);",
+                       "SELECT vertexNumber1, vertexNumber2, similarity FROM Matching WHERE graphPairId=(SELECT id FROM GraphPair WHERE graphId1=? AND graphId2=?);",
                        -1, &selectMatchingStatement, NULL);
     sqlite3_bind_int(selectMatchingStatement, 1, id1);
     sqlite3_bind_int(selectMatchingStatement, 2, id2);
 
-    memset(matching, -1, sizeof(int));
+    memset(matching, -1, sizeof(TMatching) * vertex_count);
 
     while ((sqlite3_step(selectMatchingStatement)) == SQLITE_ROW) {
         int vertex_number_1 = sqlite3_column_int(selectMatchingStatement, 0);
         int vertex_number_2 = sqlite3_column_int(selectMatchingStatement, 1);
+        double similarity = sqlite3_column_double(selectMatchingStatement, 2);
 
-        matching[vertex_number_1] = vertex_number_2;
+        matching[vertex_number_1] = (TMatching){ vertex_number_2, similarity };
     }
 
     sqlite3_finalize(selectMatchingStatement);
@@ -196,15 +226,7 @@ int *load_matching(sqlite3 *db, unsigned int id1, unsigned int id2, size_t verte
     return matching;
 }
 
-void map_ids(TGraph *graph, int *map) {
-    for (int i = 0; i < graph->node_count; ++i) {
-        TVertex *v = graph_get_vertex(graph, i);
-
-        v->id = map[v->id];
-    }
-}
-
-double coverage(TGraph *graph, TArray *ngrams) {
+/*double coverage(TGraph *graph, TArray *ngrams) {
     int *values = ngrams->values;
     int* visited = calloc(sizeof(int), graph->node_count);
     int nodes_covered = 0;
@@ -258,9 +280,9 @@ int main(int argc, char *argv[]) {
     sqlite3_finalize(selectGraphStatement);
 
     return 0;
-}
+}*/
 
-/*int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	sqlite3 *db;
 	ngram_fn fns[2] = { &compute_path_ngrams, &compute_neighbourhood_ngrams };
 	
@@ -275,13 +297,13 @@ int main(int argc, char *argv[]) {
     while (scanf("%i %i %i %i", &fn, &n, &id1, &id2) != EOF) {
         TGraph *g1 = load_graph(db, id1);
         TGraph *g2 = load_graph(db, id2);
-        int *map = load_matching(db, id1, id2, g1->node_count);
+        TMatching *map = load_matching(db, id1, id2, g1->node_count);
+        double sim = graph_compare(g1, g2, map, fns[fn], n);
 
-        map_ids(g1, map);
-        printf("%i\t%i\t%f\n", id1, id2, graph_compare(g1, g2, fns[fn], n));
+        printf("%i\t%i\t%f\n", id1, id2, sim);
     }
 	
 	sqlite3_close(db);
 	
 	return 0;
-}*/
+}

@@ -33,4 +33,6 @@ void array_subarray(TArray* array, size_t start_index, size_t end_index);
 
 double array_compare(TArray* array1, TArray* array2, array_entry_cmp_fn cmp_fn);
 
+TArray* array_intersect(TArray* array1, TArray* array2, array_entry_cmp_fn cmp_fn);
+
 #endif //GRAPHS_ARRAY_H

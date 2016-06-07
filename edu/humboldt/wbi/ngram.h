@@ -7,8 +7,6 @@
 
 typedef struct NGram TNGram;
 
-//typedef int ngram[3];
-
 struct NGram {
     int* values;
 };
