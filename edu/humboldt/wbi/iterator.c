@@ -9,8 +9,8 @@ TIterator* iterator_init(void* addr, size_t step, int length) {
     TIterator* it = malloc(sizeof(TIterator));
 
     it->step = step;
-    it->addr = addr - step;
-    it->limit = addr + (step * (length - 1));
+    it->addr = (char*) addr - step;
+    it->limit = (char*) addr + (step * (length - 1));
 
     return it;
 }
@@ -20,7 +20,7 @@ int iterator_has_next(TIterator* iterator) {
 }
 
 void* iterator_next(TIterator* iterator) {
-    iterator->addr += iterator->step;
+    (char*) iterator->addr += iterator->step;
 
     return iterator->addr;
 }
