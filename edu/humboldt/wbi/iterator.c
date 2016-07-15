@@ -20,7 +20,7 @@ int iterator_has_next(TIterator* iterator) {
 }
 
 void* iterator_next(TIterator* iterator) {
-    (char*) iterator->addr += iterator->step;
+    iterator->addr += iterator->step;
 
     return iterator->addr;
 }

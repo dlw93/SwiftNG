@@ -2,13 +2,12 @@
 #include <stdbool.h>
 #include <malloc.h>
 #include <string.h>
-#include "lib/sqlite/sqlite3.h"
 #include "edu/humboldt/wbi/graph.h"
 #include "edu/humboldt/wbi/matching.h"
 #include "edu/humboldt/wbi/hashmap.h"
-#include "index.h"
-#include "hashfns.h"
-#include "args.h"
+#include "edu/humboldt/wbi/index.h"
+#include "edu/humboldt/wbi/hashfns.h"
+#include "edu/humboldt/wbi/args.h"
 
 int binomial(int n, int r) {
 	if (r > n / 2) {
@@ -168,14 +167,14 @@ TArray *compute_neighbourhood_ngrams(TGraph *g, int n) {
 	return ngrams;
 }
 
-void compare(sqlite3 *db) {
+void compare(TIndex *idx) {
 	ngram_fn fns[2] = { &compute_path_ngrams, &compute_neighbourhood_ngrams };
 	int id1, id2, fn, n;
-
+	
 	while (scanf_s("%i %i %i %i", &fn, &n, &id1, &id2) != EOF) {
-		TGraph *g1 = load_graph(db, id1);
-		TGraph *g2 = load_graph(db, id2);
-		TMatching *map = load_matching(db, id1, id2, g1->node_count);
+		TGraph *g1 = index_load_graph(idx, id1);
+		TGraph *g2 = index_load_graph(idx, id2);
+		TMatching *map = index_load_matching(idx, id1, id2, g1->node_count);
 		double sim = graph_compare(g1, g2, map, fns[fn], n);
 
 		printf("%i\t%i\t%f\n", id1, id2, sim);
@@ -183,15 +182,15 @@ void compare(sqlite3 *db) {
 }
 
 int main(int argc, char *argv[]) {
-	sqlite3 *db;
+	TIndex idx;
 	TArgs args;
 
 	args_init(&args, argc, argv);
 
 	char *index_path = args_get(&args, "index");
 
-	if (sqlite3_open(index_path, &db)) {
-		fprintf(stderr, "Can't connect to database: %s\r\n", sqlite3_errmsg(db));
+	if (index_init(&idx, index_path)) {
+		fprintf(stderr, "Can't open index.\r\n");
 		return 1;
 	}
 
@@ -199,34 +198,20 @@ int main(int argc, char *argv[]) {
 		char *wf_path = args_get(&args, "workflows");
 		char *map_path = args_get(&args, "mappings");
 
-		build_index(db, wf_path, map_path);
+		index_build(&idx, wf_path, map_path);
 	}
 	else if (args_has(&args, "compare")) {
-		compare(db);
+		compare(&idx);
 	}
 	else {
 		fprintf(stderr, "You need to specify either --compare or --build-index mode.\r\n");
 		return 1;
 	}
 
-	sqlite3_close(db);
+	index_free(&idx);
 
 	return 0;
 }
-
-/*
-THashMap map;
-hashmap_init(&map, 1, &jenkins_oat_hash, &fnv_hash);
-int a = 10, b = 11, c = 17;
-hashmap_set(&map, "a", &a);
-hashmap_set(&map, "izsrgfi", &b);
-hashmap_set(&map, "ab", &c);
-hashmap_set(&map, "a", &c);
-printf("%d\r\n", *(int*) hashmap_get(&map, "a"));
-printf("%d\r\n", *(int*) hashmap_get(&map, "ab"));
-printf("%d\r\n", *(int*) hashmap_get(&map, "izsrgfi"));
-// EXPECTED: 17, 17, 11
-*/
 
 /*double coverage(TGraph *graph, TArray *ngrams) {
 	int *values = ngrams->values;

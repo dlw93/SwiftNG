@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include "edu/humboldt/wbi/hashmap.h"
+#include "hashmap.h"
 #include "hashfns.h"
 
 typedef struct HashMap TArgs;

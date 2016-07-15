@@ -10,8 +10,8 @@
 typedef struct Iterator TIterator;
 
 struct Iterator {
-    void* addr;
-    void* limit;
+    char* addr;
+    char* limit;
     size_t step;
 };
 

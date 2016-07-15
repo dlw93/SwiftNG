@@ -2,7 +2,6 @@
 #define GRAPHS_HASHMAP_H
 
 #include <stdlib.h>
-#include "../../../hashfns.h"
 
 typedef struct HashMap THashMap;
 typedef struct Slot TSlot;

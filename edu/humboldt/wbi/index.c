@@ -5,8 +5,9 @@
 #include <string.h>
 #include <stdarg.h>
 #include <malloc.h>
-#include "lib/cJSON/cJSON.h"
-#include "edu/humboldt/wbi/hashmap.h"
+#include "../../../lib/cJSON/cJSON.h"
+#include "hashmap.h"
+#include "hashfns.h"
 
 typedef void(*FJsonProcessor)(char*, va_list);
 
@@ -260,9 +261,20 @@ void apply_to_dir(char *dir_path, FJsonProcessor fn, ...) {
 
 #endif // _WIN32
 
-void build_index(sqlite3 *db, char *wf_path, char *map_path) {
+#define get_db_handle(index) *index
+
+int index_init(TIndex * index, char * path) {
+	return sqlite3_open(path, index);
+}
+
+void index_free(TIndex *index) {
+	sqlite3_close(*index);
+}
+
+void index_build(TIndex *index, char *wf_path, char *map_path) {
 	THashMap id_map;
 	TPreparedStatements stmts;
+	sqlite3 *db = get_db_handle(index);
 
 	setup_db(db);
 	hashmap_init(&id_map, 7000, &jenkins_oat_hash);
@@ -274,7 +286,8 @@ void build_index(sqlite3 *db, char *wf_path, char *map_path) {
 	finialize_statements(db, &stmts);
 }
 
-TGraph *load_graph(sqlite3 *db, unsigned int id) {
+TGraph *index_load_graph(TIndex *index, unsigned int id) {
+	sqlite3 *db = get_db_handle(index);
 	TGraph *graph = NULL;
 	sqlite3_stmt *selectGraphStatement, *selectVertexStatement, *selectEdgeStatement;
 
@@ -311,7 +324,8 @@ TGraph *load_graph(sqlite3 *db, unsigned int id) {
 	return graph;
 }
 
-TMatching *load_matching(sqlite3 *db, unsigned int id1, unsigned int id2, size_t vertex_count) {
+TMatching *index_load_matching(TIndex *index, unsigned int id1, unsigned int id2, size_t vertex_count) {
+	sqlite3 *db = get_db_handle(index);
 	TMatching *matching = malloc(sizeof(TMatching) * vertex_count);
 	sqlite3_stmt *selectMatchingStatement;
 
@@ -328,7 +342,8 @@ TMatching *load_matching(sqlite3 *db, unsigned int id1, unsigned int id2, size_t
 		int vertex_number_2 = sqlite3_column_int(selectMatchingStatement, 1);
 		double similarity = sqlite3_column_double(selectMatchingStatement, 2);
 
-		matching[vertex_number_1] = (TMatching) { .value = vertex_number_2, .score = similarity };
+		matching[vertex_number_1].value = vertex_number_2;
+		matching[vertex_number_1].score = similarity;
 	}
 
 	sqlite3_finalize(selectMatchingStatement);
