@@ -126,7 +126,7 @@ double* reverse_map(TMatching *matching, size_t matching_length, size_t length) 
 	return rmap;
 }
 
-double graph_compare(TGraph *g1, TGraph *g2, TMatching* map, ngram_fn fn, unsigned int n) {
+double graph_compare(TGraph *g1, TGraph *g2, TMatching* map, FNGram fn, unsigned int n) {
 	double* rmap = reverse_map(map, g1->node_count, MAX2(g1->node_count, g2->node_count));
 	double sim = 0.0;
 	TArray *a1 = fn(g1, n);

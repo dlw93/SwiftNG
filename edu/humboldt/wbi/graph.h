@@ -12,7 +12,7 @@
 
 typedef struct Graph TGraph;
 
-typedef TArray* (* ngram_fn)(TGraph*, int);
+typedef TArray* (* FNGram)(TGraph*, int);
 
 struct Graph {
     unsigned int node_count;
@@ -75,6 +75,6 @@ double graph_ngram_coverage(TGraph* graph, TArray* ngrams);
 /**
  * Compares two graphs and return a value within [0, 1].
  */
-double graph_compare(TGraph* g1, TGraph* g2, TMatching* map, ngram_fn fn, unsigned int n);
+double graph_compare(TGraph* g1, TGraph* g2, TMatching* map, FNGram fn, unsigned int n);
 
 #endif //GRAPHS_GRAPH_H

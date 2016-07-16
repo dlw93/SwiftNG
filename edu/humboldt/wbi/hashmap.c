@@ -1,6 +1,8 @@
 #include "hashmap.h"
 
 void hashmap_init(THashMap * map, size_t capacity, hash_fn hash) {
+	if (capacity == 0) capacity = 1;	// prohibit "calloc(0)"
+
 	map->items = calloc(capacity * 3, sizeof(TSlot));	// load factor shall be less then 0.319; 1 / 0.319 ~ 3.315 ~ 3
 	map->items_count = 0;
 	map->capacity = capacity * 3;
