@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-std=c99 -lsqlite3 -lpthread -ldl
 LFLAGS=-lm -lsqlite3 -lpthread -ldl
-SRC=lib/sqlite/sqlite3.c lib/cJSON/cJSON.c iterator.c vertex.c array.c ngram.c ngramfns.c hashmap.c hashfns.c graph.c index.c args.c main.c
+SRC=lib/sqlite/sqlite3.c lib/cJSON/cJSON.c src/iterator.c src/vertex.c src/array.c src/ngram.c src/ngramfns.c src/hashmap.c src/hashfns.c src/graph.c src/index.c src/args.c src/main.c
 OBJ=$(SRC:%.c=obj/%.o)
 BIN=SwiftNG
 
