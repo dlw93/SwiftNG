@@ -14,7 +14,10 @@ void hashmap_destroy(THashMap *map) {
 	free(map->items);
 }
 
-TSlot *find_slot_by_hash(THashMap * map, size_t hash) {
+// expand, if more then half full
+#define expand_if_necessary(map) if (map->items_count > (map->capacity >> 1)) expand(map);
+
+TSlot *find_slot(THashMap * map, size_t hash) {
 	size_t pos = hash % map->capacity;
 	size_t j = 0;
 	TSlot *slot = map->items + pos;
@@ -34,14 +37,8 @@ TSlot *find_slot_by_hash(THashMap * map, size_t hash) {
 	return NULL;
 }
 
-TSlot *find_slot(THashMap * map, void * key) {
-	size_t hash = map->hash(key);
-
-	return find_slot_by_hash(map, hash);
-}
-
 void set_by_hash(THashMap * map, size_t hash, void * val) {
-	TSlot *slot = find_slot_by_hash(map, hash);
+	TSlot *slot = find_slot(map, hash);
 
 	slot->taken = true;
 	slot->hash = hash;
@@ -65,23 +62,23 @@ void expand(THashMap *map) {
 }
 
 void hashmap_set(THashMap * map, void * key, void * val) {
-	if (map->items_count > (map->capacity >> 1)) {	// expand, if more then half full
-		expand(map);
-	}
+	expand_if_necessary(map);
 
-	TSlot *slot = find_slot(map, key);
+	size_t hash = map->hash(key);
+	TSlot *slot = find_slot(map, hash);
 
 	if (!slot->taken) {
 		map->items_count++;	// do only when slot was empty
 	}
 
 	slot->taken = true;
-	slot->hash = map->hash(key);
+	slot->hash = hash;
 	slot->val = val;
 }
 
 void * hashmap_get(THashMap * map, void * key) {
-	TSlot *slot = find_slot(map, key);
+	size_t hash = map->hash(key);
+	TSlot *slot = find_slot(map, hash);
 
 	return slot != NULL ? slot->val : NULL;
 }

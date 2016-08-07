@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <malloc.h>
-#include "../../../lib/cJSON/cJSON.h"
+#include "../lib/cJSON/cJSON.h"
 #include "hashmap.h"
 #include "hashfns.h"
 
@@ -267,7 +267,7 @@ int index_init(TIndex * index, char * path) {
 	return sqlite3_open(path, index);
 }
 
-void index_free(TIndex *index) {
+void index_destroy(TIndex *index) {
 	sqlite3_close(*index);
 }
 

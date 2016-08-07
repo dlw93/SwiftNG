@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include "edu/humboldt/wbi/graph.h"
-#include "edu/humboldt/wbi/matching.h"
-#include "edu/humboldt/wbi/index.h"
-#include "edu/humboldt/wbi/args.h"
-#include "edu/humboldt/wbi/ngrams/ngramfns.h"
+#include "graph.h"
+#include "matching.h"
+#include "index.h"
+#include "args.h"
+#include "ngramfns.h"
 
 void compare(TIndex *idx) {
 	FNGram fns[2] = { path_ngrams, neighbourhood_ngrams };
@@ -25,22 +25,6 @@ int main(int argc, char *argv[]) {
 	TArgs args;
 
 	args_init(&args, argc, argv);
-
-	/*THashMap m;
-	hashmap_init(&m, 1, jenkins_oat_hash, strcmp);
-	hashmap_set(&m, "a", 1);
-	hashmap_set(&m, "b", 2);
-	hashmap_set(&m, "c", 3);
-	hashmap_set(&m, "a", 2);
-	printf("%d\r\n", hashmap_contains(&m, "a"));
-	printf("%d\r\n", hashmap_contains(&m, "b"));
-	printf("%d\r\n", hashmap_contains(&m, "c"));
-	printf("%d\r\n", hashmap_contains(&m, "d"));
-	printf("%d\r\n", hashmap_get(&m, "a"));
-	printf("%d\r\n", hashmap_get(&m, "b"));
-	printf("%d\r\n", hashmap_get(&m, "c"));
-	getchar();
-	exit(0);*/
 
 	if (args_has(&args, "index")) {
 		char *index_path = args_get(&args, "index");
@@ -65,10 +49,26 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	index_free(&idx);
+	index_destroy(&idx);
 
 	return 0;
 }
+
+/*THashMap m;
+hashmap_init(&m, 0, jenkins_oat_hash, strcmp);
+hashmap_set(&m, "a", 1);
+hashmap_set(&m, "b", 2);
+hashmap_set(&m, "c", 3);
+hashmap_set(&m, "a", 2);
+printf("%d\r\n", hashmap_contains(&m, "a"));
+printf("%d\r\n", hashmap_contains(&m, "b"));
+printf("%d\r\n", hashmap_contains(&m, "c"));
+printf("%d\r\n", hashmap_contains(&m, "d"));
+printf("%d\r\n", hashmap_get(&m, "a"));
+printf("%d\r\n", hashmap_get(&m, "b"));
+printf("%d\r\n", hashmap_get(&m, "c"));
+getchar();
+exit(0);*/
 
 /*double coverage(TGraph *graph, TArray *ngrams) {
 	int *values = ngrams->values;
