@@ -2,7 +2,7 @@
 #include <string.h>
 
 void args_init(TArgs * args, int argc, char * argv[]) {
-	hashmap_init(args, argc - 1, &jenkins_oat_hash);
+	hashmap_init(args, argc - 1, &jenkins_oat_hash, &strcmp);
 
 	for (size_t i = 1; i < argc; i++) {
 		char *arg = argv[i] + 2;

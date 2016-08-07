@@ -277,11 +277,13 @@ void index_build(TIndex *index, char *wf_path, char *map_path) {
 	sqlite3 *db = get_db_handle(index);
 
 	setup_db(db);
-	hashmap_init(&id_map, 7000, &jenkins_oat_hash);
+	hashmap_init(&id_map, 7000, &jenkins_oat_hash, &strcmp);
 	setup_statements(db, &stmts);
 
 	apply_to_dir(wf_path, &read_workflow, db, &id_map, &stmts);
 	apply_to_dir(map_path, &read_mapping, db, &id_map, &stmts);
+
+	hashmap_destroy(&id_map);
 
 	finialize_statements(db, &stmts);
 }
