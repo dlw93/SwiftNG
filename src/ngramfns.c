@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <malloc.h>
 #include <string.h>
+#include "defines.h"
 
 int binomial(int n, int r) {
 	if (r > n / 2) {
@@ -36,7 +37,7 @@ bool next_combination(size_t item[], size_t n, size_t N) {
 
 TArray* compute_combinations(size_t n, size_t k) {
 	int bin = binomial(n, k);
-	size_t *item = alloca(sizeof(size_t) * k);
+	size_t *item = __alloca(size_t, k);
 	TArray *combs_array = malloc(sizeof(TArray));
 
 	array_init(combs_array, bin, k * sizeof(int));
