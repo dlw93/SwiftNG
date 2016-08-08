@@ -1,6 +1,16 @@
 #include "index.h"
 
+#ifdef _WIN32
 #include <windows.h>
+#elif __linux__
+#include <linux/limits.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#else
+#endif // _WIN32
+
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -256,7 +266,32 @@ void apply_to_dir(char *dir_path, FJsonProcessor fn, ...) {
 	FindClose(hFind);
 }
 #elif __linux__
+void apply_to_dir(char *dir_path, FJsonProcessor fn, ...) {
+	DIR *d = opendir(dir_path);
+	struct dirent *dir;
+	struct stat sb;
+	char path[PATH_MAX];
+	
+	va_list args, args_cp;
+	va_start(args, fn);
 
+	if (d) {
+		while ((dir = readdir(d)) != NULL) {
+			snprintf(path, PATH_MAX, "%s/%s", dir_path, dir->d_name);
+			lstat(path, &sb);
+			
+			if (S_ISREG(sb.st_mode)) {
+				va_copy(args_cp, args);
+				fn(path, args_cp);
+				va_end(args_cp);
+			}
+		}
+
+		closedir(d);
+	}
+
+	va_end(args);
+}
 #else
 
 #endif // _WIN32
