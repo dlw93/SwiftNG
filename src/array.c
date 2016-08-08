@@ -26,7 +26,7 @@ void array_subarray(TArray* array, size_t start_index, size_t end_index) {
 
 	size_t offset = array->entry_length * start_index;
 
-	(char*)array->values += offset;
+	array->values = (char*)array->values + offset;
 	array->entry_count = end_index - start_index;
 }
 
