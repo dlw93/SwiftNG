@@ -1,4 +1,10 @@
 # SwiftNG
-A project associated with my bachelor thesis and subsequent research at wbi@hub.
+## Background
+This project was started in the context of my bachelor's thesis on "Graph Similarity for Scientific Workflow Similarity Search" at the chair of "Knowledge Management in Bioinformatics" (Humboldt University of Berlin). It was further refined and extended during subsequent research.
 
-[![Build Status](https://travis-ci.com/dlw93/SwiftNG.svg?token=deyrSJtM9s44j9rB93sY&branch=master)](https://travis-ci.com/dlw93/SwiftNG)
+## Technical Notes
+The project is developed on Windows using Visual Studio and compiled with the Intel C Compiler, although only few optimisations would be necessary to get it to compile on UNIX/Linux with gcc. 
+
+The project relies on only two libraries apart from the C standard library:
+*[cJSON](https://github.com/DaveGamble/cJSON)
+*[SQLite](https://www.sqlite.org/)
