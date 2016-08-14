@@ -6,5 +6,6 @@ This project was started in the context of my bachelor's thesis on "Graph Simila
 The project is developed on Windows using Visual Studio and compiled with the Intel C Compiler, although only few optimisations would be necessary to get it to compile on UNIX/Linux with gcc. 
 
 The project relies on only two libraries apart from the C standard library:
-*[cJSON](https://github.com/DaveGamble/cJSON)
-*[SQLite](https://www.sqlite.org/)
+
+* [cJSON](https://github.com/DaveGamble/cJSON)
+* [SQLite](https://www.sqlite.org/)
