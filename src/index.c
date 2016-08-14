@@ -18,7 +18,6 @@
 #include "../lib/cJSON/cJSON.h"
 #include "hashmap.h"
 #include "hashfns.h"
-#include "defines.h"
 
 typedef void(*FJsonProcessor)(char*, va_list);
 
