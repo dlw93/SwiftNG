@@ -1,6 +1,6 @@
 # SwiftNG
 ## Background
-This project was started in the context of my bachelor's thesis on *Graph Similarity for Scientific Workflow Similarity Search* at the chair of *[Knowledge Management in Bioinformatics](https://www.informatik.hu-berlin.de/de/forschung/gebiete/wbi)* (Humboldt University of Berlin). It was further refined and extended during subsequent research.
+This project was started in the context of my bachelor's thesis on *Graph Similarity for Scientific Workflow Similarity Search* at the chair of *[Knowledge Management in Bioinformatics](https://www.informatik.hu-berlin.de/de/forschung/gebiete/wbi)* (Humboldt University of Berlin). It was further refined and extended during subsequent research and finally presented at *[LWDA 2016](http://hpi.de/en/mueller/lwda-2016.html)*.
 
 ## Technical Notes
 The project is developed on Windows using Visual Studio and compiled with the Intel C Compiler, although only few optimisations would be necessary to get it to compile on UNIX/Linux with gcc. 
