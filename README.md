@@ -16,9 +16,11 @@ The project relies on only two libraries apart from the C standard library:
 Before being able to compare workflows, an index containing all workflows and their matchings needs to be built. The required files can be gathered from the [FlowAlike](http://flowalike.informatik.hu-berlin.de) website.
 
 To build the index, call 
+
 ```SwiftNG --build-index --index=<path_to_index> --workflows=<path_to_workflows> --mappings=<path_to_matchings>```
 
-To load the index and enter the REPL loop, call
+To load the index and enter the REPL, call
+
 ```SwiftNG --compare --index=<path_to_index>```
 
 The program is now waiting for input in the format ```fn n a b``` with ```fn``` being the *n*-gram pattern to use (currently, only *fn=0* is supported, ```n``` specifying the size of the *n*-grams and ```a, b``` being the two workflows' [myExperiment](http://www.myexperiment.org/home) ids.
